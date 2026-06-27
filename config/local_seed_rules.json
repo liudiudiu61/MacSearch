@@ -1,0 +1,58 @@
+{
+  "search_strategies": [
+    {
+      "rule_id": "rule_douban_markdown",
+      "physical_id": "local.rule.douban_markdown",
+      "professional_description": "Markdown exports from Douban reading, movie, and media records",
+      "target_ext": [".md"],
+      "enable_content_idx": true,
+      "priority_path": ["~/Documents/Douban_Lists"],
+      "parser_type": "text_parser",
+      "max_size_mb": 50
+    },
+    {
+      "rule_id": "rule_steam_saves",
+      "physical_id": "local.rule.steam_saves",
+      "professional_description": "Steam application support save data indexed by filename first",
+      "target_ext": [".json", ".sav", ".cfg", ".vdf"],
+      "enable_content_idx": false,
+      "priority_path": ["~/Library/Application Support/Steam"],
+      "parser_type": "filename_only",
+      "max_size_mb": 50
+    }
+  ],
+  "blacklists": [
+    {
+      "rule_id": "blacklist_system",
+      "physical_id": "local.blacklist.system",
+      "professional_description": "macOS system root excluded from local traversal",
+      "path_pattern": "/System",
+      "match_type": "path_prefix",
+      "is_enabled": true
+    },
+    {
+      "rule_id": "blacklist_library",
+      "physical_id": "local.blacklist.library",
+      "professional_description": "macOS global library excluded from local traversal",
+      "path_pattern": "/Library",
+      "match_type": "path_prefix",
+      "is_enabled": true
+    },
+    {
+      "rule_id": "blacklist_node_modules",
+      "physical_id": "local.blacklist.node_modules",
+      "professional_description": "Node package dependency trees excluded from local traversal",
+      "path_pattern": "node_modules",
+      "match_type": "path_segment",
+      "is_enabled": true
+    },
+    {
+      "rule_id": "blacklist_git",
+      "physical_id": "local.blacklist.git",
+      "professional_description": "Git metadata directories excluded from local traversal",
+      "path_pattern": ".git",
+      "match_type": "path_segment",
+      "is_enabled": true
+    }
+  ]
+}
