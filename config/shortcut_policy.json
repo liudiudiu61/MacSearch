@@ -1,0 +1,6 @@
+{
+  "physical_id": "local.shortcut.search_window",
+  "professional_description": "Global shortcut for opening the search base",
+  "accelerator": "CommandOrControl+Space",
+  "window_label": "main"
+}

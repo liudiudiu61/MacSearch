@@ -1,0 +1,14 @@
+{
+  "fieldDirectives": [
+    { "name": "name", "description": "Match file names" },
+    { "name": "content", "description": "Match indexed file content" },
+    { "name": "ext", "description": "Match file extensions" }
+  ],
+  "regexDelimiter": "/",
+  "errors": {
+    "invalidRegex": {
+      "code": "invalid_regex",
+      "message": "Regular expression is incomplete."
+    }
+  }
+}

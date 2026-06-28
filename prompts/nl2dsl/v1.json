@@ -1,0 +1,29 @@
+{
+  "version": "v1",
+  "physical_id": "prompt.nl2dsl.v1",
+  "professional_description": "NL2DSL prompt contract for local search query generation",
+  "sse_events": ["received", "analyzing", "cache_hit", "llm_validated", "generated"],
+  "semantic_cache_threshold": 0.92,
+  "provider_mode": "deterministic",
+  "llm_provider": {
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4.1-mini",
+    "api_key_env": "OPENAI_API_KEY",
+    "timeout_seconds": 30,
+    "system_prompt": "Return only QueryDSL JSON. The JSON object must contain query_text and filters. Each filter must use configured fields and operators."
+  },
+  "allowed_fields": ["name", "content", "extension", "path"],
+  "allowed_operators": ["contains", "equals"],
+  "field_terms": {
+    "content": ["内容", "全文", "里面", "里的"],
+    "name": ["文件名", "名字", "标题"],
+    "path": ["路径", "目录", "文件夹"],
+    "extension": ["扩展名", "后缀", "Markdown", "md"]
+  },
+  "synonyms": {
+    "Markdown": ".md",
+    "md": ".md"
+  },
+  "default_field": "content",
+  "default_operator": "contains"
+}

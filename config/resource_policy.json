@@ -1,0 +1,12 @@
+{
+  "physical_id": "local.control.resource_policy",
+  "professional_description": "Resource guard policy for local index building",
+  "low_battery_percent": 20,
+  "high_cpu_temperature_celsius": 75,
+  "battery_probe_failure_percent": 0,
+  "cpu_temperature_probe_failure_celsius": 65535,
+  "full_disk_access_probe_paths": [
+    "~/Library/Mail",
+    "~/Library/Safari"
+  ]
+}

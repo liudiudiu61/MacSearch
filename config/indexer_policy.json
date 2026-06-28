@@ -1,0 +1,51 @@
+{
+  "physical_id": "local.indexer.policy",
+  "professional_description": "Two-layer local traversal and watch queue policy",
+  "scan_roots": [
+    "~/Desktop",
+    "~/Documents",
+    "~/Downloads"
+  ],
+  "opt_in_watch_roots": [
+    "~/Desktop",
+    "~/Documents",
+    "~/Downloads"
+  ],
+  "exclude_path_fragments": [
+    "/node_modules/",
+    "/.git/",
+    "/Library/Caches/",
+    "/target/",
+    "/dist/",
+    "/.venv/"
+  ],
+  "max_parse_size_bytes": 52428800,
+  "text_extensions": [
+    ".txt",
+    ".md",
+    ".markdown",
+    ".json",
+    ".csv",
+    ".xml",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".rs",
+    ".py",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".vue",
+    ".html",
+    ".css",
+    ".scss",
+    ".log"
+  ],
+  "encrypted_extensions": [
+    ".gpg",
+    ".enc",
+    ".pgp"
+  ],
+  "parse_error_code": "Parse_Error"
+}

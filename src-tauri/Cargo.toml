@@ -1,0 +1,16 @@
+[package]
+name = "maisou-tauri-core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "maisou_tauri_core"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+tauri = { version = "2", features = [] }
+tauri-plugin-global-shortcut = "2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
