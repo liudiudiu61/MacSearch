@@ -1,3 +1,4 @@
+use crate::parsers::ParserRegistry;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
@@ -12,6 +13,15 @@ pub struct IndexerPolicy {
     pub text_extensions: Vec<String>,
     pub encrypted_extensions: Vec<String>,
     pub parse_error_code: String,
+    pub content_index: ContentIndexPolicy,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContentIndexPolicy {
+    pub enabled: bool,
+    pub batch_size: u64,
+    pub snippet_radius: u64,
+    pub default_limit: u64,
 }
 
 impl IndexerPolicy {
@@ -32,6 +42,10 @@ impl IndexerPolicy {
                 .map(|value| value.to_ascii_lowercase())
                 .collect(),
             parse_error_code: extract_json_string(payload, "parse_error_code")?,
+            content_index: ContentIndexPolicy::from_json_object(extract_json_object(
+                payload,
+                "content_index",
+            )?)?,
         })
     }
 
@@ -47,7 +61,24 @@ impl IndexerPolicy {
             text_extensions: vec![".txt".to_string(), ".md".to_string(), ".json".to_string()],
             encrypted_extensions: vec![".gpg".to_string(), ".enc".to_string()],
             parse_error_code: "Parse_Error".to_string(),
+            content_index: ContentIndexPolicy {
+                enabled: true,
+                batch_size: 64,
+                snippet_radius: 500,
+                default_limit: 50,
+            },
         }
+    }
+}
+
+impl ContentIndexPolicy {
+    fn from_json_object(payload: &str) -> Result<Self, IndexerPolicyParseError> {
+        Ok(Self {
+            enabled: extract_json_bool(payload, "enabled")?,
+            batch_size: extract_json_u64(payload, "batch_size")?,
+            snippet_radius: extract_json_u64(payload, "snippet_radius")?,
+            default_limit: extract_json_u64(payload, "default_limit")?,
+        })
     }
 }
 
@@ -237,11 +268,22 @@ pub fn enqueue_fs_event_with_content_gate(
 }
 
 pub fn parse_text_content(policy: &IndexerPolicy, bytes: &[u8]) -> ParseStatus {
-    match std::str::from_utf8(bytes) {
+    parse_content_for_extension(policy, ".txt", bytes)
+}
+
+pub fn parse_content_for_extension(
+    policy: &IndexerPolicy,
+    extension: &str,
+    bytes: &[u8],
+) -> ParseStatus {
+    match ParserRegistry::from_text_extensions(
+        policy.text_extensions.clone(),
+        policy.parse_error_code.clone(),
+    )
+    .parse_extension(extension, bytes)
+    {
         Ok(_) => ParseStatus::Parsed,
-        Err(_) => ParseStatus::ParseError {
-            code: policy.parse_error_code.clone(),
-        },
+        Err(failure) => ParseStatus::ParseError { code: failure.code },
     }
 }
 
@@ -311,8 +353,13 @@ pub fn run_watch_once<W: FileEventWatcher>(
 
 fn record_from_entry(policy: &IndexerPolicy, entry: FileSystemEntry) -> FileIndexRecord {
     let extension = extension_of(&entry.physical_path);
+    let parser_registry = ParserRegistry::from_text_extensions(
+        policy.text_extensions.clone(),
+        policy.parse_error_code.clone(),
+    );
     let content_action = if entry.size_bytes > policy.max_parse_size_bytes
         || policy.encrypted_extensions.contains(&extension)
+        || !parser_registry.supports_extension(&extension)
     {
         ContentAction::FilenameOnly
     } else {
@@ -429,6 +476,54 @@ fn extract_json_u64(payload: &str, field: &'static str) -> Result<u64, IndexerPo
     value_text
         .parse::<u64>()
         .map_err(|_| IndexerPolicyParseError { field })
+}
+
+fn extract_json_bool(payload: &str, field: &'static str) -> Result<bool, IndexerPolicyParseError> {
+    let marker = format!("\"{}\"", field);
+    let field_start = payload
+        .find(&marker)
+        .ok_or(IndexerPolicyParseError { field })?;
+    let after_field = &payload[field_start + marker.len()..];
+    let colon_index = after_field
+        .find(':')
+        .ok_or(IndexerPolicyParseError { field })?;
+    let after_colon = after_field[colon_index + 1..].trim_start();
+    if after_colon.starts_with("true") {
+        Ok(true)
+    } else if after_colon.starts_with("false") {
+        Ok(false)
+    } else {
+        Err(IndexerPolicyParseError { field })
+    }
+}
+
+fn extract_json_object<'a>(
+    payload: &'a str,
+    field: &'static str,
+) -> Result<&'a str, IndexerPolicyParseError> {
+    let marker = format!("\"{}\"", field);
+    let field_start = payload
+        .find(&marker)
+        .ok_or(IndexerPolicyParseError { field })?;
+    let after_field = &payload[field_start + marker.len()..];
+    let object_start = after_field
+        .find('{')
+        .ok_or(IndexerPolicyParseError { field })?;
+    let after_object_start = &after_field[object_start..];
+    let mut depth = 0_u32;
+    for (index, character) in after_object_start.char_indices() {
+        match character {
+            '{' => depth += 1,
+            '}' => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return Ok(&after_object_start[..=index]);
+                }
+            }
+            _ => {}
+        }
+    }
+    Err(IndexerPolicyParseError { field })
 }
 
 fn extract_json_string_array(
@@ -706,7 +801,13 @@ mod tests {
               "max_parse_size_bytes": 52428800,
               "text_extensions": [".txt", ".md", ".json"],
               "encrypted_extensions": [".gpg", ".enc"],
-              "parse_error_code": "Parse_Error"
+              "parse_error_code": "Parse_Error",
+              "content_index": {
+                "enabled": true,
+                "batch_size": 64,
+                "snippet_radius": 500,
+                "default_limit": 50
+              }
             }"#,
         )
         .expect("policy should parse");
@@ -714,9 +815,39 @@ mod tests {
         assert_eq!(policy.scan_roots, vec!["/Users/example/Documents"]);
         assert_eq!(policy.max_parse_size_bytes, 52_428_800);
         assert_eq!(policy.parse_error_code, "Parse_Error");
+        assert_eq!(policy.content_index.default_limit, 50);
         assert!(policy
             .exclude_path_fragments
             .contains(&"/.git/".to_string()));
+    }
+
+    #[test]
+    fn parses_content_index_policy_from_json() {
+        let policy = IndexerPolicy::from_json(
+            r#"{
+              "physical_id": "local.indexer.policy",
+              "professional_description": "test policy",
+              "scan_roots": ["/work"],
+              "opt_in_watch_roots": ["/work"],
+              "exclude_path_fragments": ["/.git/"],
+              "max_parse_size_bytes": 52428800,
+              "text_extensions": [".md", ".txt"],
+              "encrypted_extensions": [".enc"],
+              "parse_error_code": "Parse_Error",
+              "content_index": {
+                "enabled": true,
+                "batch_size": 64,
+                "snippet_radius": 500,
+                "default_limit": 50
+              }
+            }"#,
+        )
+        .expect("policy parses");
+
+        assert!(policy.content_index.enabled);
+        assert_eq!(policy.content_index.batch_size, 64);
+        assert_eq!(policy.content_index.snippet_radius, 500);
+        assert_eq!(policy.content_index.default_limit, 50);
     }
 
     #[test]
@@ -752,6 +883,19 @@ mod tests {
             .all(|record| record.physical_path != "/opt/in/project/.git/config"));
         assert_eq!(records[0].content_action, ContentAction::FilenameOnly);
         assert_eq!(records[1].content_action, ContentAction::FilenameOnly);
+    }
+
+    #[test]
+    fn first_layer_scan_routes_unsupported_extension_to_filename_only() {
+        let policy = IndexerPolicy::default_for_tests();
+        let records = first_layer_scan(
+            &policy,
+            vec![FileSystemEntry::file("/opt/in/manual.pdf", 1024, 100)],
+        );
+
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].file_name, "manual.pdf");
+        assert_eq!(records[0].content_action, ContentAction::FilenameOnly);
     }
 
     #[test]
@@ -850,15 +994,13 @@ mod tests {
     fn std_file_system_scanner_expands_configured_home_roots() {
         let home = std::env::var("HOME").expect("HOME should be set for scanner tests");
         let policy = IndexerPolicy {
-            physical_id: "local.indexer.policy".to_string(),
-            professional_description: "Indexer policy for home expansion tests".to_string(),
             scan_roots: vec!["~/definitely-not-a-maisou-test-directory".to_string()],
             opt_in_watch_roots: Vec::new(),
             exclude_path_fragments: Vec::new(),
             max_parse_size_bytes: 10,
             text_extensions: vec![".txt".to_string()],
             encrypted_extensions: Vec::new(),
-            parse_error_code: "Parse_Error".to_string(),
+            ..IndexerPolicy::default_for_tests()
         };
 
         assert_eq!(

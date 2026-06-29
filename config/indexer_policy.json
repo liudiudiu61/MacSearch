@@ -47,5 +47,11 @@
     ".enc",
     ".pgp"
   ],
-  "parse_error_code": "Parse_Error"
+  "parse_error_code": "Parse_Error",
+  "content_index": {
+    "enabled": true,
+    "batch_size": 64,
+    "snippet_radius": 500,
+    "default_limit": 50
+  }
 }

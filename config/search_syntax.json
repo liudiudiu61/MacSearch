@@ -1,9 +1,62 @@
 {
   "fieldDirectives": [
-    { "name": "name", "description": "Match file names" },
-    { "name": "content", "description": "Match indexed file content" },
-    { "name": "ext", "description": "Match file extensions" }
+    { "name": "name", "description": "文件名" },
+    { "name": "content", "description": "正文内容" },
+    { "name": "ext", "description": "扩展名" }
   ],
+  "fileTypeGroups": {
+    "documents": [".md", ".txt", ".pdf", ".doc", ".docx", ".rtf"],
+    "tables": [".csv", ".xls", ".xlsx", ".numbers"],
+    "presentations": [".ppt", ".pptx", ".key"],
+    "code": [".json", ".ts", ".tsx", ".js", ".jsx", ".rs", ".py", ".vue", ".html", ".css"],
+    "images": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic"]
+  },
+  "extensionKindGroups": [
+    { "kind": "文档", "extensions": ["md", "txt", "pdf", "doc", "docx", "rtf"] },
+    { "kind": "表格", "extensions": ["csv", "xls", "xlsx", "numbers"] },
+    { "kind": "演示", "extensions": ["ppt", "pptx", "key"] },
+    { "kind": "代码", "extensions": ["json", "ts", "tsx", "js", "jsx", "rs", "py", "vue", "html", "css"] },
+    { "kind": "图片", "extensions": ["png", "jpg", "jpeg", "gif", "webp", "heic"] }
+  ],
+  "surfaceNotices": {
+    "index_empty": {
+      "tone": "muted",
+      "title": "尚未建立索引",
+      "message": "重建索引后即可搜索本机文件。",
+      "actionLabel": "重建索引"
+    },
+    "loading": {
+      "tone": "active",
+      "title": "正在更新结果",
+      "message": "索引或搜索正在进行，结果会自动刷新。",
+      "actionLabel": null
+    },
+    "suspended": {
+      "tone": "warning",
+      "title": "内容解析已暂停",
+      "message": "资源策略正在保护设备，文件名搜索仍可继续。",
+      "actionLabel": null
+    },
+    "parse_errors": {
+      "tone": "warning",
+      "title": "存在解析失败",
+      "message": "部分文件无法解析，已跳过内容索引。",
+      "actionLabel": null
+    },
+    "no_results": {
+      "tone": "muted",
+      "title": "无搜索结果",
+      "message": "换一个文件名、扩展名或内容关键词试试。",
+      "actionLabel": null
+    },
+    "runtime_unavailable": {
+      "tone": "warning",
+      "title": "搜索服务不可用",
+      "message": "桌面运行时暂时无法响应，请稍后重试或重建索引。",
+      "actionLabel": "重建索引"
+    }
+  },
+  "searchDebounceMs": 80,
   "regexDelimiter": "/",
   "errors": {
     "invalidRegex": {

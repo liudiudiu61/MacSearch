@@ -8,12 +8,19 @@ pub struct SearchQuery {
     pub text: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+pub const HIT_SOURCE_FILENAME: &str = "filename";
+pub const HIT_SOURCE_CONTENT: &str = "content";
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct SearchHit {
     pub physical_path: String,
     pub file_name: String,
     pub extension: String,
     pub modified_at: u64,
+    pub size_bytes: u64,
+    pub hit_source: String,
+    pub score: f64,
+    pub snippet: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -22,6 +29,7 @@ pub struct FileNameSearchIndexRecord {
     pub file_name: String,
     pub extension: String,
     pub modified_at: u64,
+    pub size_bytes: u64,
     normalized_path: String,
     normalized_file_name: String,
     normalized_extension: String,
@@ -35,6 +43,7 @@ pub fn build_file_name_search_index(records: &[FileIndexRecord]) -> Vec<FileName
             file_name: record.file_name.clone(),
             extension: record.extension.clone(),
             modified_at: record.modified_at,
+            size_bytes: record.size_bytes,
             normalized_path: record.physical_path.to_ascii_lowercase(),
             normalized_file_name: record.file_name.to_ascii_lowercase(),
             normalized_extension: normalize_extension(&record.extension),
@@ -67,6 +76,10 @@ pub fn search_file_name_index(
             file_name: record.file_name.clone(),
             extension: record.extension.clone(),
             modified_at: record.modified_at,
+            size_bytes: record.size_bytes,
+            hit_source: HIT_SOURCE_FILENAME.to_string(),
+            score: 0.0,
+            snippet: None,
         })
         .collect()
 }
@@ -97,6 +110,7 @@ impl FileNameSearchIndexRecord {
             file_name: record.file_name.clone(),
             extension: record.extension.clone(),
             modified_at: record.modified_at,
+            size_bytes: record.size_bytes,
             normalized_path: record.physical_path.to_ascii_lowercase(),
             normalized_file_name: record.file_name.to_ascii_lowercase(),
             normalized_extension: normalize_extension(&record.extension),

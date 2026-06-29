@@ -16,6 +16,7 @@ export type SearchSyntaxConfig = {
     name: string;
     description: string;
   }>;
+  fileTypeGroups?: Record<string, string[]>;
   regexDelimiter: string;
   errors: {
     invalidRegex: SearchError;

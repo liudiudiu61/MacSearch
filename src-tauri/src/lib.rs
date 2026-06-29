@@ -1,13 +1,16 @@
 pub mod commands;
+pub mod content_store;
 pub mod control_center;
 pub mod global_shortcut;
 pub mod indexer;
+pub mod parsers;
 pub mod runtime_index;
 pub mod search;
 
 use commands::{
-    get_search_index_status_command, open_file_command, read_preview_content_command,
-    rebuild_search_index_command, reveal_file_command, search_file_names_command,
+    get_indexer_policy_settings_command, get_search_index_status_command, open_file_command,
+    read_preview_content_command, rebuild_search_index_command, reveal_file_command,
+    search_file_names_command,
 };
 use global_shortcut::{handle_search_shortcut, ShortcutAction, ShortcutPolicy};
 use runtime_index::RuntimeIndexState;
@@ -38,6 +41,7 @@ pub fn run() {
             search_file_names_command,
             rebuild_search_index_command,
             get_search_index_status_command,
+            get_indexer_policy_settings_command,
             open_file_command,
             reveal_file_command,
             read_preview_content_command

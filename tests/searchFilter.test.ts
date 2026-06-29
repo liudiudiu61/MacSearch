@@ -11,7 +11,13 @@ const results: SearchResult[] = [
     path: '~/My_Project/麦搜/高保真开发计划清单.md',
     extension: 'md',
     modifiedAt: '2026-06-27 21:40',
-    excerpt: 'Phase 3 front-end baseline.'
+    modifiedAtUnix: 1782577200,
+    sizeBytes: 4096,
+    kind: '文档',
+    excerpt: 'Phase 3 front-end baseline.',
+    hitSource: 'filename',
+    score: 0,
+    snippet: null
   },
   {
     id: 'prompt',
@@ -19,7 +25,13 @@ const results: SearchResult[] = [
     path: '~/My_Project/麦搜/prompts/nl2dsl/v1.json',
     extension: 'json',
     modifiedAt: '2026-06-27 18:52',
-    excerpt: 'Strict DSL prompt.'
+    modifiedAtUnix: 1782564720,
+    sizeBytes: 1024,
+    kind: '代码',
+    excerpt: 'Strict DSL prompt.',
+    hitSource: 'filename',
+    score: 0,
+    snippet: null
   }
 ];
 
